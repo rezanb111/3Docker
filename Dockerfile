@@ -1,7 +1,9 @@
+FROM golang:1.21-alpine AS earnfm-builder
+RUN apk add --no-cache git
+RUN go install github.com/earnfm/earnfm-client@latest
+
 FROM ubuntu:22.04
-
 ENV DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
@@ -15,13 +17,7 @@ RUN ARCH=$(uname -m) && \
     fi && \
     chmod +x /usr/local/bin/traffmonetizer
 
-RUN ARCH=$(uname -m) && \
-    if [ "$ARCH" = "x86_64" ]; then \
-        curl -L https://assets.earn.fm/client/earnfm-bin-linux-amd64 -o /usr/local/bin/earnfm; \
-    elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
-        curl -L https://assets.earn.fm/client/earnfm-bin-linux-arm64 -o /usr/local/bin/earnfm; \
-    fi && \
-    chmod +x /usr/local/bin/earnfm
+COPY --from=earnfm-builder /go/bin/earnfm-client /usr/local/bin/earnfm
 
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
